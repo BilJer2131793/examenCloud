@@ -9,6 +9,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { useEffect, useState } from "react";
 import MovieComponent from "./Component/MovieComponent.js"
+import { useRouter } from 'next/navigation';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBOZsQmJ0AD6_EPcw8-9X0lZNx8v3aHiWM",
@@ -23,14 +24,24 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
-const user = auth.currentUser;
+
 
 console.log("user: " + JSON.stringify(auth.currentUser, null, 2));
 
 export default function PagePrincipale() {
-
+  const router = useRouter();
   const [listFilm, setListFilm] = useState([])
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        router.push("/login");
+      }
+    });
 
+    return () => unsubscribe();
+  }, [auth, router]);
 
   async function getFilm() {
     if(listFilm.length == 0){
